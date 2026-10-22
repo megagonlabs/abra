@@ -1,0 +1,823 @@
+/* abra-views — controlled-mirror view styling. Highlight uses a static
+  outline/stroke channel; selection uses per-view fills or opacity.
+   Coordination paints a higher-priority animated outline/stroke-family channel. */
+
+:root {
+  --abra-highlight: #f59e0b; /* local hover/highlight accent */
+  --abra-coord: #111111; /* shared coordination accent (animated) */
+  --abra-coord-dim: rgba(17, 17, 17, 0);
+  --abra-table-selection-fill: #dbeafe;
+  --abra-table-selection-surface: #bfdbfe;
+}
+
+/* ---- coordination animations (the only animated paint) ---- */
+@keyframes abra-pulse-border {
+  0%,
+  100% {
+    border-color: var(--abra-coord);
+  }
+  50% {
+    border-color: var(--abra-coord-dim);
+  }
+}
+@keyframes abra-pulse-left {
+  0%,
+  100% {
+    border-left-color: var(--abra-coord);
+  }
+  50% {
+    border-left-color: var(--abra-coord-dim);
+  }
+}
+@keyframes abra-pulse-top {
+  0%,
+  100% {
+    border-top-color: var(--abra-coord);
+  }
+  50% {
+    border-top-color: var(--abra-coord-dim);
+  }
+}
+
+/* ===================== GRAPH ===================== */
+.abra-graph {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+  background: #ffffff;
+}
+
+.abra-node {
+  box-sizing: border-box;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 2px solid transparent; /* coordination_channel (animated when lit) */
+  font:
+    12px / 1.2 system-ui,
+    sans-serif;
+  color: #111111;
+  text-align: center;
+  background: #3a4a6a; /* base fill; encoding / selection override inline */
+  user-select: none;
+  transition:
+    border-color 120ms ease,
+    opacity 120ms ease;
+}
+.abra-node.abra-coord {
+  animation: abra-pulse-border 1.1s ease-in-out infinite;
+}
+/* connection zones run the full length of each node EDGE, invisible — grab any
+   border to connect; the centre stays drag-to-move + click-to-select. No visible
+   "separate handle". */
+.abra-node .abra-node-handle {
+  min-width: 0;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  opacity: 0;
+  cursor: crosshair;
+}
+.abra-node .abra-node-handle-h {
+  width: 100%;
+  height: 8px;
+}
+.abra-node .abra-node-handle-v {
+  width: 8px;
+  height: 100%;
+}
+
+.abra-node-detail {
+  position: absolute;
+  z-index: 20;
+  max-width: 220px;
+  padding: 6px 8px;
+  border: 1px solid #111;
+  border-radius: 6px;
+  color: #111;
+  background: #fff8dc;
+  font:
+    12px / 1.25 system-ui,
+    sans-serif;
+  pointer-events: none;
+}
+
+/* ===================== TABLE ===================== */
+.abra-table-wrap {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: #ffffff;
+  color: #1a1f36;
+  font:
+    13px / 1.3 system-ui,
+    sans-serif;
+}
+
+.abra-table-wrap :focus,
+.abra-table-wrap :focus-visible {
+  outline: none;
+}
+
+.abra-table-wrap.is-block-dragging,
+.abra-table-wrap.is-block-dragging * {
+  user-select: none;
+}
+.abra-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.abra-table th,
+.abra-table td {
+  border: 1px solid #e5e7eb;
+  padding: 4px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+.abra-table th {
+  position: sticky;
+  top: 0;
+  background: #f3f4f6;
+  color: #1a1f36;
+  cursor: pointer;
+  border-top: 2px solid transparent; /* COLUMN coordination_channel */
+  user-select: none;
+  transition:
+    border-top-color 120ms ease,
+    background-color 120ms ease;
+  z-index: 1;
+}
+.abra-table th.abra-coord {
+  animation: abra-pulse-top 1.1s ease-in-out infinite;
+}
+.abra-table td {
+  border-left: 2px solid transparent; /* leftmost cell shows ROW coordination via row handle */
+}
+.abra-table td.abra-cell {
+  border: 1px solid #e5e7eb; /* CELL coordination_channel overrides when lit */
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+.abra-table td.abra-cell.abra-coord {
+  animation: abra-pulse-border 1.1s ease-in-out infinite;
+}
+.abra-row-handle {
+  width: 18px;
+  text-align: center;
+  color: #9aa1ab;
+  background: #f3f4f6;
+  cursor: pointer;
+  border-left: 3px solid transparent; /* ROW coordination_channel */
+  transition:
+    border-left-color 120ms ease,
+    background-color 120ms ease;
+}
+.abra-row-handle.abra-coord {
+  animation: abra-pulse-left 1.1s ease-in-out infinite;
+}
+.abra-th-content {
+  display: flex;
+  flex-direction: column; /* topline (label + sort) on top; the filter box on its own line below */
+  align-items: stretch;
+  gap: 4px;
+  min-width: 0;
+}
+.abra-th-topline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+.abra-th-label {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+/* reorder preview: the dragged row shown (dimmed) at the slot it will land in */
+.abra-row-dragging {
+  opacity: 0.45;
+  background: rgba(245, 158, 11, 0.08);
+  outline: 1px dashed var(--abra-highlight, #f59e0b);
+  outline-offset: -1px;
+}
+
+/* inline column rename (edit_column) — an input in place of the header label */
+.abra-th-edit {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  font-weight: 600;
+  padding: 1px 3px;
+  border: 1px solid var(--abra-highlight, #f59e0b);
+  border-radius: 3px;
+}
+/* Honest-affordance cursor utilities — applied by every view via derive.affordanceClass():
+   an element with no bound action gets `abra-cur-default` (plain arrow); otherwise the
+   class hints the KIND of the published interaction. Never signal an unbound gesture. */
+.abra-cur-default {
+  cursor: default;
+}
+.abra-cur-pointer {
+  cursor: pointer;
+}
+.abra-cur-text {
+  cursor: text;
+}
+.abra-cur-crosshair {
+  cursor: crosshair;
+}
+.abra-cur-grab {
+  cursor: grab;
+}
+.abra-cur-grab:active {
+  cursor: grabbing;
+}
+
+.abra-row-handle-button,
+.abra-cell-button {
+  display: block;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: inherit;
+  /* cursor comes from an abra-cur-* affordance class (derive.affordanceClass), never a
+     static default — the element must not promise an interaction the canvas didn't bind. */
+}
+.abra-row-handle-button {
+  color: #9aa1ab;
+  text-align: center;
+}
+.abra-cell-button {
+  min-width: 100%;
+  min-height: 1.4em; /* keep EMPTY cells (new rows/columns) clickable + drag-startable */
+  color: #1a1f36;
+  white-space: nowrap;
+}
+.abra-th-button {
+  width: 22px;
+  height: 22px;
+  margin-left: 6px;
+  border: 1px solid #d5d9e2;
+  border-radius: 5px;
+  background: #fff;
+  color: #334155;
+  font:
+    12px / 1 system-ui,
+    sans-serif;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.abra-th-button:hover,
+.abra-th-button.is-active {
+  border-color: var(--abra-highlight);
+  color: #111827;
+}
+.abra-th-filter,
+.abra-cell-editor {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  padding: 4px 6px;
+  color: #111827;
+  background: #fff;
+  font:
+    13px / 1.3 system-ui,
+    sans-serif;
+}
+.abra-th-filter {
+  /* full-width on its own line beneath the label (was sharing the topline row) */
+  width: 100%;
+  max-width: none;
+}
+.abra-th-filter.is-active,
+.abra-th-filter:focus {
+  border-color: var(--abra-highlight);
+}
+.abra-cell.is-editing {
+  outline: 2px solid #ff6b6b;
+  outline-offset: -2px;
+  opacity: 1;
+}
+.abra-cell-editor {
+  width: 100%;
+  min-width: 120px;
+}
+
+/* add_row / add_column affordances — identical thin dashed "ghost" strips with a
+   centered +: add_row spans the table width (a `<td colSpan>`), add_column is a
+   full-height button beside the table (flex sibling). Same look, one per axis. */
+.abra-table-grid {
+  display: flex;
+  align-items: stretch;
+}
+/* the <table> lives inside this BLOCK flex-item (never a direct flex child — a table as
+   a flex item collapses its columns in narrow containers). Keeps its min-content floor
+   so columns stay natural width; the outer .abra-table-wrap scrolls when it's wide. */
+.abra-table-scroll {
+  flex: 1 1 auto;
+}
+/* re-assert table box types so no host-app global reset can flatten the grid. */
+.abra-table {
+  display: table;
+}
+.abra-table thead {
+  display: table-header-group;
+}
+.abra-table tbody {
+  display: table-row-group;
+}
+.abra-table tr {
+  display: table-row;
+}
+.abra-table th,
+.abra-table td {
+  display: table-cell;
+}
+.abra-col-add {
+  flex: 0 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-left: 2px dashed #cbd5e1;
+  background: rgba(148, 163, 184, 0.08);
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.abra-col-add:hover {
+  background: rgba(148, 163, 184, 0.2);
+}
+.abra-table .abra-add-row .abra-add-row-cell {
+  padding: 0;
+  cursor: pointer;
+  background: rgba(148, 163, 184, 0.08);
+  border-top: 2px dashed #cbd5e1;
+}
+.abra-table .abra-add-row:hover .abra-add-row-cell {
+  background: rgba(148, 163, 184, 0.2);
+}
+.abra-add-row-cell button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 24px;
+  padding: 4px;
+  background: none;
+  border: none;
+  color: #64748b;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* ---- text view ---------------------------------------------------------- */
+.abra-text-wrap :focus,
+.abra-text-wrap :focus-visible {
+  outline: none;
+}
+.abra-text-wrap {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: #ffffff;
+  color: #1a1f36;
+  font:
+    13px / 1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+.abra-text-toolbar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+}
+.abra-text-find {
+  width: 160px;
+  padding: 2px 6px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font: inherit;
+}
+.abra-text-find-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+.abra-text-find-count {
+  min-width: 3.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.abra-text-find-btn {
+  padding: 0 6px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1.6;
+}
+.abra-text-find-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.abra-text-body {
+  flex: 1;
+  padding: 4px 0;
+}
+.abra-text-line {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 1px 10px;
+  border: 0;
+  border-left: 3px solid transparent;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: default;
+  white-space: pre-wrap;
+}
+.abra-text-line.is-hoverable:hover {
+  background: rgba(245, 158, 11, 0.08);
+}
+.abra-text-line.is-heading {
+  margin-top: 6px;
+  font-weight: 700;
+}
+.abra-text-line.is-selected {
+  background: var(--abra-table-selection-fill);
+}
+.abra-text-line.is-match {
+  background: rgba(245, 158, 11, 0.28);
+}
+.abra-text-line.abra-coord {
+  border-left-color: var(--abra-coord);
+  background: rgba(17, 17, 17, 0.06);
+  /* coordination signifier: the same animated accent the row-handle / node / cell use,
+     so text coordination reads as coordination (not a static local highlight) — the
+     every-line granularity is intentional (a document has no record gutter). */
+  animation: abra-pulse-left 1.1s ease-in-out infinite;
+}
+.abra-text-gutter {
+  min-width: 1.8em;
+  color: #9aa1ab;
+  text-align: right;
+  user-select: none;
+}
+.abra-text-content {
+  flex: 1;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: pre-wrap;
+  /* cursor from an abra-cur-* affordance class (derive.affordanceClass), not a static value */
+}
+.abra-text-fold,
+.abra-text-fold-spacer {
+  width: 1.3em;
+  flex: 0 0 auto;
+}
+.abra-text-fold {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #9aa1ab;
+  font: inherit;
+  cursor: pointer;
+  text-align: center;
+}
+.abra-text-para-head {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+  padding: 3px 10px;
+  border-left: 3px solid transparent;
+}
+.abra-text-para-head:hover {
+  background: rgba(245, 158, 11, 0.08);
+}
+.abra-text-para-head.is-selected {
+  background: var(--abra-table-selection-fill);
+}
+.abra-text-para-head.abra-coord {
+  border-left-color: var(--abra-coord);
+  background: rgba(17, 17, 17, 0.06);
+}
+.abra-text-para-title {
+  flex: 1;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* ---- display view ------------------------------------------------------- */
+.abra-display-wrap {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #ffffff;
+}
+.abra-display-single {
+  position: relative; /* anchor the back-to-gallery button */
+}
+.abra-display-back {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+.abra-display-back:hover {
+  background: #ffffff;
+}
+.abra-display-wrap :focus,
+.abra-display-wrap :focus-visible {
+  outline: none;
+}
+.abra-display-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: grab;
+}
+.abra-display-stage:active {
+  cursor: grabbing;
+}
+.abra-display-panzoom {
+  transform-origin: center;
+  will-change: transform;
+}
+.abra-display-img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  user-select: none;
+}
+.abra-display-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+.abra-display-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+  padding: 8px;
+  overflow: auto;
+}
+.abra-display-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.abra-display-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background: #f3f4f6;
+  overflow: hidden;
+  cursor: pointer;
+}
+.abra-display-item.is-hoverable:hover {
+  border-color: var(--abra-highlight);
+}
+.abra-display-item.is-selected {
+  outline: 3px solid #dbeafe;
+  outline-offset: -3px;
+}
+.abra-display-item.abra-coord {
+  border-color: var(--abra-coord);
+}
+.abra-display-strip .abra-display-item {
+  flex: 0 0 auto;
+  height: 92%;
+}
+.abra-display-strip .abra-display-img {
+  width: auto;
+  height: 100%;
+  max-width: none;
+}
+.abra-display-caption {
+  padding: 3px 6px;
+  font-size: 11px;
+  color: #334155;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* ---- display: raster viewer (image + pdf) + map ------------------------- */
+.abra-display-viewer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.abra-display-zoombar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  gap: 4px;
+}
+.abra-display-zoombar button {
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #334155;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.abra-display-zoombar button:hover {
+  background: #ffffff;
+  border-color: var(--abra-highlight);
+}
+.abra-display-scroll {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  cursor: grab;
+  background: #f8fafc;
+}
+.abra-display-scroll:active {
+  cursor: grabbing;
+}
+.abra-display-scale {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  /* NO padding: the scroll content box must equal the media box so the minimap's
+     viewport rectangle (computed from scrollWidth/Height) aligns with the thumbnail —
+     padding inset the image and threw the overlay off. */
+  padding: 0;
+}
+/* a single raster in the viewer fits the width, then zoom enlarges it (grid/strip tiles
+   keep their own sizing — this only targets content inside the scaled scroll surface) */
+.abra-display-scale .abra-display-img {
+  /* Match the PDF: a FIXED base width (like <Page width={820}>) that CSS `zoom` scales +
+     the scroll area overflows. `width:100%` was relative to the zoomed container, so it
+     re-fit on every zoom and never grew — hence "zoom did nothing" for images. */
+  width: 820px;
+  height: auto;
+  max-width: none;
+  max-height: none;
+}
+.abra-display-doc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.abra-display-page {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
+.abra-display-map {
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+  background: #dfe3eb;
+}
+.abra-display-msg {
+  padding: 16px;
+  color: #475569;
+  font:
+    13px / 1.4 system-ui,
+    sans-serif;
+}
+
+/* text: add-line affordance (ghost button at a paragraph's end) */
+.abra-text-addline {
+  margin: 2px 0 6px 34px;
+  padding: 1px 8px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 5px;
+  background: rgba(148, 163, 184, 0.08);
+  color: #64748b;
+  font:
+    12px / 1.4 system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+.abra-text-addline:hover {
+  background: rgba(148, 163, 184, 0.2);
+  color: #334155;
+}
+
+/* display: minimap (viewport overview for the raster viewer) */
+.abra-display-minimap {
+  position: absolute;
+  right: 8px;
+  top: 42px; /* directly under the zoom controls */
+  z-index: 2;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  cursor: pointer;
+}
+/* minimap thumbnail wrapper — holds the image (minimap is images-only). */
+.abra-display-minimap-thumb {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0.85;
+}
+.abra-display-minimap-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.abra-display-minimap-vp {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1.5px solid var(--abra-highlight);
+  background: rgba(245, 158, 11, 0.15);
+  pointer-events: none;
+}
+
+/* text: inline line editor + word-level find highlight */
+.abra-text-line-editor {
+  flex: 1 1 auto;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 1px 4px;
+  border: 1px solid #ff6b6b;
+  border-radius: 4px;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+}
+.abra-text-hit {
+  background: #fde68a;
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.abra-text-hit.is-current {
+  background: #f59e0b;
+  box-shadow: 0 0 0 1px #b45309;
+}
+
+/* #7 — text selection is a Text-View affordance only. Graph + table are browsing
+   surfaces: a stray drag must never select node labels / cell text. Text stays
+   selectable (select-to-copy); display images are already non-selectable. */
+.abra-graph,
+.abra-table-wrap {
+  user-select: none;
+}
+.abra-text-line {
+  user-select: text;
+}

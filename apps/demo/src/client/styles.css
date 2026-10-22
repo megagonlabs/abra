@@ -1,0 +1,602 @@
+/* Shell styles — design tokens live in theme.css (imported first). Values are
+ * var(--…) tokens, not inline numbers, except a few genuine chrome one-offs (dot
+ * diameters, the top-bar height, the ✕ glyph) which are pixel-precise by nature
+ * and commented as such. Layout matches /tmp/abra-shell-mockup.html. */
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  color: var(--text);
+  line-height: var(--line-height);
+  font-size: var(--fs);
+  background: #fff;
+}
+
+.abra-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ---- top bar ---- */
+.abra-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: 0 var(--space-12);
+  height: 46px; /* chrome height — one-off */
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-subtle);
+  position: relative;
+}
+.abra-brand {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+}
+.abra-sess {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  margin-left: var(--space-6);
+}
+.abra-conn {
+  width: 8px; /* status dot — one-off */
+  height: 8px;
+  border-radius: 50%;
+  background: var(--online);
+  margin-left: var(--space-6);
+}
+.abra-conn--recon {
+  background: var(--busy);
+}
+.abra-spacer {
+  flex: 1;
+}
+
+/* participant strip */
+.abra-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+.abra-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  position: relative;
+}
+
+/* status dot (shared: strip + popover) */
+.abra-sdot {
+  width: 9px; /* status dot — one-off */
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+.abra-sdot--online {
+  background: var(--online);
+}
+.abra-sdot--working {
+  background: var(--busy);
+  box-shadow: 0 0 0 3px var(--busy-halo);
+}
+.abra-sdot--starting {
+  background: var(--text-faint);
+}
+.abra-sdot--crashed {
+  background: var(--danger);
+}
+.abra-sdot--ghost {
+  visibility: hidden;
+}
+
+/* top-bar + popover buttons are Blueprint <Button>s now */
+
+/* ---- body (two-pane) ---- */
+.abra-body {
+  flex: 1;
+  min-height: 0;
+}
+
+/* the chat↔canvas + in-panel dividers (react-resizable-panels Separator):
+   a single hairline that turns accent + thickens on hover, inside a generous
+   transparent hit-area. The separator IS the divider line (panels carry no border). */
+.abra-sep {
+  background: transparent;
+  position: relative;
+  flex: 0 0 auto;
+}
+.abra-sep[data-orientation="vertical"],
+.abra-sep:not([data-orientation]) {
+  width: 9px; /* hit-area — one-off */
+  cursor: col-resize;
+}
+.abra-sep[data-orientation="horizontal"] {
+  height: 9px; /* hit-area — one-off */
+  cursor: row-resize;
+}
+.abra-sep::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  background: var(--line);
+  transition: background var(--transition);
+}
+.abra-sep[data-orientation="vertical"]::before,
+.abra-sep:not([data-orientation])::before {
+  width: 1px;
+  height: 100%;
+}
+.abra-sep[data-orientation="horizontal"]::before {
+  width: 100%;
+  height: 1px;
+}
+.abra-sep:hover::before,
+.abra-sep:active::before {
+  background: var(--accent);
+}
+.abra-sep[data-orientation="vertical"]:hover::before,
+.abra-sep:not([data-orientation]):hover::before,
+.abra-sep[data-orientation="vertical"]:active::before,
+.abra-sep:not([data-orientation]):active::before {
+  width: 2px;
+}
+.abra-sep[data-orientation="horizontal"]:hover::before,
+.abra-sep[data-orientation="horizontal"]:active::before {
+  height: 2px;
+}
+
+/* ---- chat ---- */
+/* .abra-chat-pane needs no border — the resizable separator is the divider line. */
+.abra-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+}
+.abra-messages {
+  flex: 1;
+  min-height: 0; /* let the list shrink + scroll instead of pushing the composer off-screen */
+  overflow: auto;
+  list-style: none;
+  margin: 0;
+  padding: var(--space-10) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+/* one message row: a bubble aligned to its side (agents left, you right). */
+.abra-msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+.abra-msg--a {
+  align-items: flex-start;
+}
+.abra-msg--u {
+  align-items: flex-end;
+}
+.abra-msg--cont {
+  margin-top: calc(-1 * var(--space-4)); /* tuck a same-sender run closer together */
+}
+.abra-msg-from {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  margin: 0 var(--space-6) 1px;
+  color: hsl(var(--agent-hue, 210), 42%, 40%); /* per-agent color, keyed on --agent-hue */
+}
+.abra-msg-body {
+  max-width: 85%;
+  font-size: var(--fs);
+  line-height: 1.35;
+  word-break: break-word;
+  white-space: pre-wrap; /* preserve user newlines / multi-line messages */
+  padding: var(--space-4) var(--space-8); /* dense bubble */
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+.abra-msg--a .abra-msg-body {
+  background: hsl(var(--agent-hue, 210), 62%, 95%);
+  border-color: hsl(var(--agent-hue, 210), 40%, 87%);
+  border-bottom-left-radius: 3px; /* tail toward the sender side */
+}
+.abra-msg--u .abra-msg-body {
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 3px;
+}
+/* a coordination chip stays legible on the accent (your) bubble */
+/* coordination chip: hover to light the exact element it points at across the canvas panel */
+.abra-refchip {
+  display: inline;
+  font: inherit;
+  color: var(--accent);
+  background: var(--accent-subtle, rgba(45, 114, 210, 0.1));
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 0 5px;
+  margin: 0 1px;
+  cursor: pointer;
+  white-space: normal;
+}
+.abra-refchip:hover {
+  background: var(--accent);
+  color: #fff;
+}
+/* user-message variant: declared after the base rules (specificity order) */
+.abra-msg--u .abra-refchip {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+.abra-msg--u .abra-refchip:hover {
+  background: #fff;
+  color: var(--accent);
+}
+.abra-refchip--gone {
+  color: var(--text-faint);
+  background: var(--bg-subtle);
+  border-color: var(--line);
+  border-style: dashed;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+.abra-typing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  font-size: var(--fs-xs);
+  color: var(--busy);
+  font-style: italic;
+}
+.abra-composer {
+  display: flex;
+  align-items: flex-end; /* keep Send at the bottom as the textarea grows */
+  gap: var(--space-6);
+  padding: var(--space-10);
+  border-top: 1px solid var(--line-subtle);
+}
+.abra-composer-input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font: inherit;
+  resize: none;
+  field-sizing: content; /* native auto-grow to content (Chromium; 1-row box elsewhere) */
+  line-height: 1.4;
+  max-height: 140px;
+  overflow-y: auto;
+}
+.abra-composer button {
+  flex: none; /* never shrink */
+  font: inherit; /* UA button font is smaller — match the input so heights line up */
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: var(--space-6) var(--space-10); /* match the textarea's single-line height */
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* ---- canvas panel ---- */
+.abra-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* canvas panel = a compact Views rail (left) + the canvas layout (right). */
+.abra-canvaswrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.abra-canvasmain {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  position: relative;
+}
+/* parked = mounted-but-hidden canvases (state preserved); kept out of layout + a11y tree. */
+.abra-parked {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ---- Views rail (client-local viewport curation) ---- */
+.abra-rail {
+  flex: 0 0 auto;
+  width: 176px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+  background: var(--bg-subtle);
+  font-size: var(--fs-xs);
+}
+.abra-rail-head {
+  padding: var(--space-6) var(--space-8);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-faint);
+  border-bottom: 1px solid var(--line-subtle);
+}
+.abra-rail-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  list-style: none;
+  margin: 0;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.abra-rail-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius);
+}
+.abra-rail-row:hover {
+  background: var(--bg);
+}
+.abra-rail-row--off {
+  opacity: 0.5;
+}
+.abra-rail-eye,
+.abra-rail-ord button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0 2px;
+  line-height: 1;
+  font-size: var(--fs-xs);
+}
+.abra-rail-eye {
+  color: var(--accent);
+}
+.abra-rail-row--off .abra-rail-eye {
+  color: var(--text-faint);
+}
+.abra-rail-ord button:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+.abra-rail-glyph {
+  color: var(--text-muted);
+}
+.abra-rail-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.abra-rail-title {
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.abra-rail-sub {
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.abra-rail-ord {
+  display: flex;
+  flex-direction: column;
+  line-height: 0.9;
+}
+.abra-rail-empty {
+  color: var(--text-faint);
+  padding: var(--space-6);
+  font-style: italic;
+}
+
+/* structure-by-count (react-resizable-panels groups) */
+.abra-structure {
+  flex: 1;
+  min-height: 0;
+}
+.abra-cell {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+.abra-row {
+  min-height: 0;
+  display: flex;
+}
+/* >4 canvases: a scrollable 2-column grid (every live canvas; the agent closes ones it
+   no longer wants shown). Not resizable — a plain grid so nothing overflows off-screen. */
+.abra-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px;
+  overflow: auto;
+}
+.abra-grid-cell {
+  min-width: 0;
+  min-height: 260px;
+  display: flex;
+  border: 1px solid var(--line, #21262d);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* ---- per-canvas (abra-views) ---- */
+.abra-canvas {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.abra-header {
+  display: flex;
+  /* the header is a COLUMN (identity row + a controls row, per canvas-chrome.css);
+     `align-items: center` shrink-wrapped + horizontally-centered those child rows, so
+     .abra-header-main's flex:1 spacer had no width to split left <-> right. Stretch them. */
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-8);
+  padding: var(--space-6) var(--space-10);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-subtle);
+  color: var(--text); /* was inheriting a faint color — pin it to the strong ink */
+  font-size: var(--fs-sm);
+}
+.abra-header-ico {
+  color: var(--text-muted);
+}
+.abra-title {
+  font-weight: 600;
+  flex: 0 1 auto;
+  min-width: 0;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.abra-header-id {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+.abra-header-by {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.abra-header-spacer {
+  flex: 1;
+}
+.abra-closed {
+  font-size: var(--fs-xs);
+  color: var(--danger);
+}
+.abra-close {
+  border: none;
+  background: none;
+  font-size: var(--fs-lg);
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-faint);
+}
+.abra-close:hover {
+  color: var(--text-muted);
+}
+.abra-canvas-body {
+  flex: 1;
+  min-height: 0; /* let the view shrink + scroll inside (else it grows past the panel) */
+  position: relative; /* anchor for the views' absolutely-positioned chrome */
+  /* NO padding/overflow: the view fills edge-to-edge and owns its own scroll — the old
+     padding drew an inset frame around every canvas, and each view already scrolls. */
+}
+.abra-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-faint);
+}
+.abra-harness-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+}
+.abra-unknown {
+  color: var(--text-faint);
+  font-style: italic;
+}
+pre {
+  font-size: var(--fs-sm);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---- participants popover ---- */
+/* The Blueprint Popover provides the floating card (position/shadow/arrow); this is
+   just the panel inside it. */
+.abra-pop {
+  width: 300px; /* popover width — one-off */
+}
+.abra-participants-pop .bp6-popover-content {
+  padding: 0; /* the rows carry their own padding */
+}
+.abra-pop-h {
+  margin: 0;
+  padding: var(--space-10) var(--space-12) var(--space-6);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-faint);
+}
+.abra-prow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+}
+.abra-prow-meta {
+  flex: 1;
+  min-width: 0;
+}
+.abra-prow-name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+.abra-prow-blurb {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* row actions + status badge are Blueprint <Button>/<Tag> now */
+.abra-pop-sep {
+  height: 1px;
+  background: var(--line-subtle);
+  margin: var(--space-6) 0;
+}
+
+/* a working agent's status Tag pulses — the at-a-glance "actively working" cue. */
+@keyframes abra-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+.abra-tag-working {
+  animation: abra-pulse 1.3s ease-in-out infinite;
+}

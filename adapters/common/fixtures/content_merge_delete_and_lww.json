@@ -1,0 +1,15 @@
+{
+  "name": "null deletes an element, new id added, rowOrder is LWW replace",
+  "base": {
+    "nodes": { "n1": { "color": "red" }, "n2": { "color": "blue" } },
+    "rowOrder": ["a", "b"]
+  },
+  "patch": {
+    "nodes": { "n2": null, "n3": { "color": "green" } },
+    "rowOrder": ["b", "a"]
+  },
+  "expected": {
+    "nodes": { "n1": { "color": "red" }, "n3": { "color": "green" } },
+    "rowOrder": ["b", "a"]
+  }
+}

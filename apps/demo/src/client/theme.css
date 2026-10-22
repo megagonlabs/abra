@@ -1,0 +1,53 @@
+/* theme.css — shared design tokens for the shell (and the Blueprint-based graph/
+ * table views when they land), so spacing / radii / type / color live in ONE place
+ * instead of as inline magic numbers scattered through the CSS.
+ *
+ * The scale, radii, type, elevation and intent colors track Blueprint
+ * (@blueprintjs/core) — $pt-grid-size 10px · $pt-border-radius 2px ·
+ * $pt-font-size{,-small,-large} 14/12/16 · $pt-line-height 1.28581 · the elevation
+ * shadows · $pt-transition (100ms ease) — so the hand-rolled chrome and Blueprint
+ * components share one visual language. The accent (house green) + neutral grays
+ * are ours. When Blueprint is installed for the views, these can map to its vars.
+ */
+:root {
+  font-family: system-ui, sans-serif;
+
+  /* spacing — px-named (rationalize into a tighter scale when the panels are designed) */
+  --space-2: 2px;
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-24: 24px;
+
+  /* radius */
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 8px;
+
+  /* type — Blueprint font scale */
+  --fs-xs: 11px;
+  --fs-sm: 12px; /* $pt-font-size-small */
+  --fs: 14px; /* $pt-font-size */
+  --fs-lg: 16px; /* $pt-font-size-large */
+  --line-height: 1.28581; /* $pt-line-height */
+
+  /* color — house accent + a neutral ramp (Blueprint grays / danger) */
+  --accent: #618320;
+  --accent-subtle: #f4f7ec; /* selected-tab tint */
+  --bg-subtle: #fafafa; /* headers / inset surfaces */
+  --line: #d8d8d8; /* borders */
+  --line-subtle: #f0f0f0; /* hairline list dividers */
+  --text: #182026; /* Blueprint dark-gray1 ink */
+  --text-muted: #5f6b7c; /* Blueprint gray2 */
+  --text-faint: #abb3bf; /* Blueprint gray4 — meta/disabled */
+  --danger: #cd4246; /* $pt-intent-danger */
+  --online: #238551; /* $pt-intent-success — agent online */
+  --busy: #c87619; /* $pt-intent-warning — agent working */
+  --busy-halo: #fbeede; /* warning tint — busy dot halo / row highlight */
+
+  /* elevation + motion (Blueprint) */
+  --elevation-1: 0 0 0 1px rgba(17, 20, 24, 0.1), 0 1px 1px rgba(17, 20, 24, 0.2);
+  --transition: 100ms cubic-bezier(0.4, 1, 0.75, 0.9); /* $pt-transition */
+}

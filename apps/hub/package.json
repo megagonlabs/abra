@@ -1,0 +1,16 @@
+{
+  "name": "hub",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/hub.js"
+  },
+  "dependencies": {
+    "abra-reducer": "workspace:*",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.12"
+  }
+}

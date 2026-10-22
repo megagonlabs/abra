@@ -1,0 +1,6 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+allowBuilds:
+  canvas: false # optional native dep of pdfjs-dist for Node-side rendering; browser uses the DOM canvas
+  esbuild: true

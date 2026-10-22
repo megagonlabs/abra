@@ -1,0 +1,42 @@
+{
+  "name": "lock delta, pending delta, then close — server-maintained fields ride on UPDATE deltas",
+  "frames": [
+    {
+      "type": "CREATE_CANVAS",
+      "canvasId": "c1",
+      "view": "table",
+      "content": {},
+      "source": "agent:a",
+      "mode": "collaborative",
+      "rev": 1
+    },
+    { "type": "UPDATE_CANVAS", "canvasId": "c1", "lock": { "holder": "agent:b", "expires": 99 }, "rev": 2 },
+    {
+      "type": "UPDATE_CANVAS",
+      "canvasId": "c1",
+      "pending": { "p1": { "pendingId": "p1", "paths": ["row/r1"], "source": "user", "expires": 120 } },
+      "rev": 3
+    },
+    { "type": "CLOSE_CANVAS", "canvasId": "c1", "rev": 4 }
+  ],
+  "expected": {
+    "rev": 4,
+    "canvases": {
+      "c1": {
+        "canvasId": "c1",
+        "owner": "agent:a",
+        "view": "table",
+        "content": {},
+        "mode": "collaborative",
+        "display": "inline",
+        "closed": true,
+        "lock": { "holder": "agent:b", "expires": 99 },
+        "pending": { "p1": { "pendingId": "p1", "paths": ["row/r1"], "source": "user", "expires": 120 } },
+        "highlight": {},
+        "appliedEffects": {},
+        "rev": 4
+      }
+    },
+    "messages": []
+  }
+}

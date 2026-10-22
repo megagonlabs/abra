@@ -1,0 +1,13 @@
+{
+  "name": "abra-spec",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "types": "gen/index.d.ts",
+  "exports": {
+    ".": { "types": "./gen/index.d.ts", "default": "./index.js" },
+    "./constants": "./constants.js",
+    "./schema/*": "./schema/*"
+  }
+}

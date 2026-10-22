@@ -1,0 +1,33 @@
+{
+  "name": "agent-bound-ui",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "demo": "bash scripts/demo.sh",
+    "playground": "pnpm --filter playground dev",
+    "gen": "node scripts/gen.mjs",
+    "gen:check": "node scripts/gen.mjs && git diff --exit-code -- packages/abra-spec/gen adapters/common/spec.py",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "test:e2e": "pnpm --filter demo exec playwright test; node scripts/e2e-report.mjs",
+    "test:e2e:ui": "pnpm --filter demo exec playwright test --ui",
+    "test:conformance": "pnpm --filter demo exec playwright test --config playwright.conformance.config.js; node scripts/conformance-report.mjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^24.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "json-schema-to-typescript": "^15.0.0",
+    "react": "^18.3",
+    "react-dom": "^18.3",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0",
+    "ws": "^8.21.0"
+  }
+}

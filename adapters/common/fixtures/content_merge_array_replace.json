@@ -1,0 +1,6 @@
+{
+  "name": "array form = full replace of a collection (object base -> array patch)",
+  "base": { "nodes": { "n1": { "color": "red" }, "n2": { "color": "blue" } } },
+  "patch": { "nodes": [{ "id": "n9", "color": "x" }] },
+  "expected": { "nodes": [{ "id": "n9", "color": "x" }] }
+}

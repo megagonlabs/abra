@@ -1,0 +1,43 @@
+{
+  "name": "a CANVAS_EVENT carrying server-maintained overlay maps updates the replica (appliedEffects + highlight)",
+  "frames": [
+    {
+      "type": "CREATE_CANVAS",
+      "canvasId": "c1",
+      "view": "graph",
+      "content": {},
+      "source": "agent:a",
+      "rev": 1
+    },
+    {
+      "type": "CANVAS_EVENT",
+      "canvasId": "c1",
+      "action": "mark",
+      "path": "node/n1",
+      "source": "agent:b",
+      "appliedEffects": { "node/n1": { "agent:b": { "effects": ["stroke"] } } },
+      "highlight": { "p1": { "agent:b": { "coordination": { "paths": ["node/n1"] } } } },
+      "rev": 2
+    }
+  ],
+  "expected": {
+    "rev": 2,
+    "canvases": {
+      "c1": {
+        "canvasId": "c1",
+        "owner": "agent:a",
+        "view": "graph",
+        "content": {},
+        "mode": "exclusive",
+        "display": "inline",
+        "closed": false,
+        "lock": null,
+        "pending": {},
+        "highlight": { "p1": { "agent:b": { "coordination": { "paths": ["node/n1"] } } } },
+        "appliedEffects": { "node/n1": { "agent:b": { "effects": ["stroke"] } } },
+        "rev": 2
+      }
+    },
+    "messages": []
+  }
+}

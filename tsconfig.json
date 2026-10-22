@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": [
+    "scripts/**/*.mjs",
+    "packages/*/src/**/*.js",
+    "packages/*/index.js",
+    "apps/*/src/**/*.js"
+  ],
+  "comment": "abra-views is React/JSX (lightly typed, not the enforced contract); its barrel re-exports .jsx and the view layer (incl. pure modules vendored from the playground) carries no JSDoc contract types — tsc can't parse the .jsx and shouldn't strict-check the rest.",
+  "exclude": ["**/node_modules", "packages/abra-views/src/index.js", "packages/abra-views/src/views/**"]
+}

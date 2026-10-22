@@ -1,0 +1,6 @@
+{
+  "name": "shallow-merge one field, keep the rest; position key untouched",
+  "base": { "rows": { "r1": { "risk": 0.9, "name": "Alice" } }, "rowOrder": ["r1"] },
+  "patch": { "rows": { "r1": { "risk": 0.2 } } },
+  "expected": { "rows": { "r1": { "risk": 0.2, "name": "Alice" } }, "rowOrder": ["r1"] }
+}

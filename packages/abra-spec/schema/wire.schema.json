@@ -1,0 +1,403 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/megagonlabs/abra/schema/wire.json",
+  "title": "Frame",
+  "description": "ABRA wire contract (VIEW-AGNOSTIC). The discriminated union of every frame on the wire: 7 participant messages + 3 hub frames + the JOIN handshake. NO ops — durable change is declarative `content`/`presentation` patches the reducer merges (per INTERACTION_RECONCILE). View-set-dependent parts stay permissive and are validated against per-view manifests (in abra-views): `view` (no closed enum), `CanvasEvent.value` (per-view value object), `content`/`presentation` (per-view shape), and the `action`/`kind` keys of `config.actions`/`highlight`.",
+  "oneOf": [
+    { "$ref": "#/definitions/CreateCanvas" },
+    { "$ref": "#/definitions/UpdateCanvas" },
+    { "$ref": "#/definitions/CloseCanvas" },
+    { "$ref": "#/definitions/CancelPending" },
+    { "$ref": "#/definitions/CanvasMessage" },
+    { "$ref": "#/definitions/CanvasEvent" },
+    { "$ref": "#/definitions/Lock" },
+    { "$ref": "#/definitions/Snapshot" },
+    { "$ref": "#/definitions/ErrorFrame" },
+    { "$ref": "#/definitions/UserMessage" },
+    { "$ref": "#/definitions/Join" }
+  ],
+  "definitions": {
+    "Scalar": {
+      "title": "Scalar",
+      "type": ["string", "number", "boolean", "null"]
+    },
+    "Source": {
+      "title": "Source",
+      "type": "string",
+      "pattern": "^(user(:.+)?|agent:.+)$",
+      "description": "A participant identity: a human (`user`, or `user:<id>` to distinguish concurrent humans / browser tabs) or an agent (`agent:<id>`)."
+    },
+    "AgentSource": {
+      "title": "AgentSource",
+      "type": "string",
+      "pattern": "^agent:.+$",
+      "description": "An agent identity (used for `owner`; unlike Source it never admits `user`)."
+    },
+    "Path": {
+      "title": "Path",
+      "type": "string",
+      "pattern": "^[^/]+(/[^/]+)*$",
+      "description": "Element address `<elementType>/<seg>[/<seg>...]`, slash-delimited. Per-view arity (node/edge/row/cell/col/range) is set by each view's manifest; here it is a generic string."
+    },
+    "EventValue": {
+      "title": "EventValue",
+      "description": "The value a CANVAS_EVENT carries. On the action branch it is a per-view named value object (a position for reposition_node, a cell edit for edit_cell, ...); on the control branch it is a Scalar. The schema keeps it permissive; the reducer validates the value per view against the catalogue's signature (type, keys, enums, referenced elements).",
+      "oneOf": [
+        { "$ref": "#/definitions/Scalar" },
+        { "type": "object", "additionalProperties": true }
+      ]
+    },
+    "Content": {
+      "title": "Content",
+      "description": "Per-view content. Collection keys (nodes/edges/rows/...) are id-keyed maps that merge per the content-merge rule (element-keyed, shallow within an element, null deletes); the per-view shapes are declared in the view catalogue (abra-views catalogue.json).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "Presentation": {
+      "title": "Presentation",
+      "description": "Mutable render params; intentionally untyped in V1 (a view-specific bag merged via declarative presentation patches — encoding, positions, layout, colorBy, filter, …).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ActionBinding": {
+      "title": "ActionBinding",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["meaning"],
+      "description": "Agent-authored per-action binding at CREATE (immutable). Every published action MUST include `meaning` (task / UX sense). Optional `label`. Whether the action is a consequence (owner-resolved pending) or a local_effect is a STRUCTURAL fact of the view — declared in the view manifest (`catalogue.json`), not chosen here. View-owned local_effects, broadcasts, and dwell also live in the manifest (`actionPresentation.json`), not here.",
+      "properties": {
+        "meaning": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" },
+        "default": { "type": "boolean", "description": "whether the view's BUILT-IN affordance for this action (its default chrome / gesture — e.g. the add-column slot, the column-header sort) is shown. Omitted ⇒ true. Set false to suppress the default chrome and drive the action ONLY from a config.controls widget (CONTROLLER_ONLY); leave true to offer both the chrome AND a control (DEFAULT_CONTROLLER), which stay in sync via shared state." }
+      }
+    },
+    "Config": {
+      "title": "Config",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "actions": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/ActionBinding" },
+          "description": "Per-action map keyed by the view's action strings (the closed set in the view's manifest). Immutable substrate."
+        },
+        "presentation": { "$ref": "#/definitions/Presentation" },
+        "controls": { "type": "array", "items": { "$ref": "#/definitions/Control" } }
+      }
+    },
+    "Control": {
+      "title": "Control",
+      "description": "Agent-composed toolbar widget (config.controls). All controls share the base fields below; `options` is `select`-only and `min`/`max`/`step` are `slider`-only. A control does ONE of `fires` / `writes`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id", "label"],
+      "properties": {
+        "type": { "enum": ["button", "select", "switch", "slider", "text"], "description": "button = one-shot trigger · select = pick one of `options` · switch = boolean toggle · slider = a number in [min,max] · text = freeform string input" },
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "meaning": { "type": "string" },
+        "fires": { "type": "string", "description": "id of a PUBLISHED action this control fires (a config.actions key); its `value` becomes the action value. Invokes the action exactly like the built-in chrome does — if that action is a structural consequence it mints the same pending. Mutually exclusive with `writes`." },
+        "writes": { "type": "string", "description": "a config.presentation key this control sets directly (a raw render knob with NO action, e.g. encoding). Firing patches config.presentation[writes] = value (ungated). Mutually exclusive with `fires`." },
+        "value": { "type": ["string", "number", "boolean"], "description": "initial / default value the control emits" },
+        "options": { "type": "array", "items": { "type": "string" }, "description": "`select` only — the discrete choices" },
+        "min": { "type": "number", "description": "`slider` only — range minimum" },
+        "max": { "type": "number", "description": "`slider` only — range maximum" },
+        "step": { "type": "number", "description": "`slider` only — increment" }
+      }
+    },
+    "LockState": {
+      "title": "LockState",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["holder", "expires"],
+      "properties": {
+        "holder": { "$ref": "#/definitions/AgentSource" },
+        "expires": { "type": "integer", "description": "absolute epoch-ms" }
+      }
+    },
+    "PendingEntry": {
+      "title": "PendingEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pendingId", "paths", "source", "expires"],
+      "properties": {
+        "pendingId": { "type": "string" },
+        "action": { "type": "string" },
+        "control": { "type": "string" },
+        "path": { "$ref": "#/definitions/Path" },
+        "paths": { "type": "array", "items": { "$ref": "#/definitions/Path" } },
+        "value": { "$ref": "#/definitions/EventValue" },
+        "source": { "$ref": "#/definitions/Source" },
+        "expires": { "type": "integer", "description": "absolute epoch-ms = now + PENDING_LEASE_MS" }
+      }
+    },
+    "Pending": {
+      "title": "Pending",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/PendingEntry" },
+      "description": "Open consequences keyed by pendingId."
+    },
+    "HighlightKindEntry": {
+      "title": "HighlightKindEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paths"],
+      "properties": {
+        "paths": { "type": "array", "items": { "$ref": "#/definitions/Path" } }
+      }
+    },
+    "Highlight": {
+      "title": "Highlight",
+      "type": "object",
+      "description": "Source- and kind-keyed coordination overlay: highlight[joinKey][source][kind] = {paths}. joinKey = ref ?? element-id; kind is the agent-/view-chosen channel (coordination, message-ref, …), styled client-side. Distinct sources and kinds compose; `paths: []` (or a null leaf) clears.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/HighlightKindEntry" }
+        }
+      }
+    },
+    "AppliedEffectEntry": {
+      "title": "AppliedEffectEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["effects"],
+      "properties": {
+        "effects": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "AppliedEffects": {
+      "title": "AppliedEffects",
+      "type": "object",
+      "description": "Agent-applied local_effects (shared because an agent has no view of its own): appliedEffects[joinKey][source] = {effects}. The local_effect compositor renders these exactly like a user's client-local local_effects. joinKey = ref ?? element-id; `effects: []` (or a null leaf) clears.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "$ref": "#/definitions/AppliedEffectEntry" }
+      }
+    },
+    "Canvas": {
+      "title": "Canvas",
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Full canvas object as carried in SNAPSHOT.",
+      "required": ["canvasId", "owner", "view", "content", "lock", "pending", "highlight", "appliedEffects", "rev"],
+      "properties": {
+        "canvasId": { "type": "string" },
+        "owner": { "$ref": "#/definitions/AgentSource" },
+        "view": { "type": "string", "description": "view-type id: one of the shipped views (graph, table, text, display); not a closed enum in the schema" },
+        "config": { "$ref": "#/definitions/Config" },
+        "content": { "$ref": "#/definitions/Content" },
+        "title": { "type": "string" },
+        "mode": { "type": "string", "enum": ["exclusive", "collaborative"] },
+        "display": { "type": "string", "enum": ["inline", "panel", "popout"] },
+        "order": { "type": "number" },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "w": { "type": "number" },
+        "h": { "type": "number" },
+        "closed": { "type": "boolean", "description": "set by CLOSE_CANVAS; read-only thereafter" },
+        "lock": { "$ref": "#/definitions/LockState" },
+        "pending": { "$ref": "#/definitions/Pending" },
+        "highlight": { "$ref": "#/definitions/Highlight" },
+        "appliedEffects": { "$ref": "#/definitions/AppliedEffects" },
+        "rev": { "type": "integer", "minimum": 0, "description": "session-global; echoed here on broadcasts" }
+      }
+    },
+    "ErrorCode": {
+      "title": "ErrorCode",
+      "type": "string",
+      "enum": [
+        "CANVAS_NOT_FOUND",
+        "CANVAS_CLOSED",
+        "IMMUTABLE_FIELD",
+        "NOT_OWNER",
+        "NOT_LOCK_HOLDER",
+        "UNKNOWN_PENDING",
+        "NOT_A_CONSEQUENCE",
+        "VALIDATION",
+        "PAYLOAD_TOO_LARGE"
+      ]
+    },
+    "CreateCanvas": {
+      "title": "CreateCanvas",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "view", "content", "source", "seq", "reqId"],
+      "properties": {
+        "type": { "const": "CREATE_CANVAS" },
+        "view": { "type": "string", "description": "view-type id: one of the shipped views (graph, table, text, display); not a closed enum in the schema" },
+        "content": { "$ref": "#/definitions/Content" },
+        "config": { "$ref": "#/definitions/Config" },
+        "title": { "type": "string" },
+        "display": { "type": "string", "enum": ["inline", "panel", "popout"] },
+        "mode": { "type": "string", "enum": ["exclusive", "collaborative"] },
+        "order": { "type": "number" },
+        "source": { "$ref": "#/definitions/Source" },
+        "seq": { "type": "integer", "minimum": 0 },
+        "reqId": { "type": "string" }
+      }
+    },
+    "UpdateCanvas": {
+      "title": "UpdateCanvas",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "canvasId", "source", "seq", "reqId"],
+      "properties": {
+        "type": { "const": "UPDATE_CANVAS" },
+        "canvasId": { "type": "string" },
+        "content": { "$ref": "#/definitions/Content" },
+        "config": { "$ref": "#/definitions/Config" },
+        "mode": { "type": "string", "enum": ["exclusive", "collaborative"] },
+        "title": { "type": "string" },
+        "display": { "type": "string", "enum": ["inline", "panel", "popout"] },
+        "order": { "type": "number" },
+        "resolves": { "type": "string", "description": "pendingId this UPDATE resolves" },
+        "source": { "$ref": "#/definitions/Source" },
+        "seq": { "type": "integer", "minimum": 0 },
+        "reqId": { "type": "string" }
+      }
+    },
+    "CloseCanvas": {
+      "title": "CloseCanvas",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "canvasId", "source", "seq", "reqId"],
+      "properties": {
+        "type": { "const": "CLOSE_CANVAS" },
+        "canvasId": { "type": "string" },
+        "source": { "$ref": "#/definitions/Source" },
+        "seq": { "type": "integer", "minimum": 0 },
+        "reqId": { "type": "string" }
+      }
+    },
+    "CancelPending": {
+      "title": "CancelPending",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "canvasId", "pendingId", "source", "seq"],
+      "properties": {
+        "type": { "const": "CANCEL_PENDING" },
+        "canvasId": { "type": "string" },
+        "pendingId": { "type": "string" },
+        "source": { "$ref": "#/definitions/Source" },
+        "seq": { "type": "integer", "minimum": 0 },
+        "reqId": { "type": "string" }
+      }
+    },
+    "CanvasMessage": {
+      "title": "CanvasMessage",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "text", "source", "seq"],
+      "properties": {
+        "type": { "const": "CANVAS_MESSAGE" },
+        "text": { "type": "string" },
+        "refs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["canvasId"],
+            "properties": {
+              "canvasId": { "type": "string" },
+              "paths": { "type": "array", "items": { "$ref": "#/definitions/Path" } },
+              "label": { "type": "string" }
+            }
+          }
+        },
+        "source": { "$ref": "#/definitions/Source" },
+        "seq": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "CanvasEvent": {
+      "title": "CanvasEvent",
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A gesture (action) XOR a control activation. Source-agnostic (user or agent via fire_action).",
+      "anyOf": [{ "required": ["action"] }, { "required": ["control"] }],
+      "required": ["type", "canvasId", "timestamp", "source", "seq"],
+      "properties": {
+        "type": { "const": "CANVAS_EVENT" },
+        "canvasId": { "type": "string" },
+        "action": { "type": "string", "description": "view action id; one of the actions in the view's manifest" },
+        "control": { "type": "string" },
+        "value": { "$ref": "#/definitions/EventValue" },
+        "config": { "type": "object", "description": "OPTIONAL — a presentation-only op payload (config.presentation patch). The server merges it into config.presentation (ungated, like a presentation op). This is how a USER's presentation gesture (collapse/reorder/layout/filter) travels — the user emits only CANVAS_EVENT; UPDATE_CANVAS is agent-only." },
+        "path": { "$ref": "#/definitions/Path" },
+        "ref": { "type": "string" },
+        "pendingId": { "type": "string" },
+        "timestamp": { "type": "integer", "description": "epoch-ms" },
+        "source": { "$ref": "#/definitions/Source" },
+        "seq": { "type": "integer", "minimum": 0 },
+        "reqId": { "type": "string", "description": "OPTIONAL — present only for an agent fire_action" }
+      }
+    },
+    "Lock": {
+      "title": "Lock",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "canvasId", "op", "source", "seq"],
+      "properties": {
+        "type": { "const": "LOCK" },
+        "canvasId": { "type": "string" },
+        "op": { "type": "string", "enum": ["claim", "release", "renew"] },
+        "source": { "$ref": "#/definitions/AgentSource" },
+        "seq": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Snapshot": {
+      "title": "Snapshot",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "canvases", "rev"],
+      "properties": {
+        "type": { "const": "SNAPSHOT" },
+        "canvases": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/Canvas" },
+          "description": "all open canvases keyed by canvasId"
+        },
+        "messages": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "rev": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "ErrorFrame": {
+      "title": "ErrorFrame",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "reqId", "code", "message"],
+      "properties": {
+        "type": { "const": "ERROR" },
+        "reqId": { "type": "string" },
+        "code": { "$ref": "#/definitions/ErrorCode" },
+        "message": { "type": "string" }
+      }
+    },
+    "UserMessage": {
+      "title": "UserMessage",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "text", "source", "seq"],
+      "properties": {
+        "type": { "const": "USER_MESSAGE" },
+        "text": { "type": "string" },
+        "source": { "$ref": "#/definitions/Source" },
+        "seq": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Join": {
+      "title": "Join",
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Pre-session transport handshake (not an 8th state message). Hub validates connectToken, binds the unspoofable source, replies SNAPSHOT or ERROR.",
+      "required": ["type", "sessionId", "connectToken"],
+      "properties": {
+        "type": { "const": "JOIN" },
+        "sessionId": { "type": "string" },
+        "connectToken": { "type": "string" },
+        "source": { "$ref": "#/definitions/Source" }
+      }
+    }
+  }
+}

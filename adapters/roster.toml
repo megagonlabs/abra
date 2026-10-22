@@ -1,0 +1,165 @@
+# Agents. Define them under [agents.<key>]; `active` lists the ones every session
+# spawns. The others can be added to a session from the participants popover.
+#
+# Per-agent fields:
+#   type      required — a registered agent type (custom · langgraph ·
+#             claude_agent_sdk · openai_agents_sdk)
+#   name      optional — display name (defaults to the capitalized key). Used as the
+#             agent's identity + @mention handle, so keep it a single token (no spaces).
+#   model     optional — model id (type/provider default otherwise)
+#   provider  optional — for type=custom: anthropic (default) · openai · fireworks
+#   prompt    optional — persona / role, appended to the type's system prompt
+#   blurb     optional — one line shown next to the agent in the participants popover
+#   tools     optional — see below
+#
+# Tools: every agent gets the 5 canvas tools. custom and langgraph agents add ours
+# from adapters/tools/ by name: web_search · image_search · fetch_url · wikipedia ·
+# scholar_search · weather · geocode · directions · calculator · python · datetime ·
+# text_stats (web_search and image_search need GOOGLE_API_KEY + GOOGLE_CSE_ID).
+# claude_agent_sdk and openai_agents_sdk agents use their SDK's built-ins instead
+# (web_search · web_fetch).
+
+# The default cast: the three agents of the demo paper and video. Every session
+# spawns them.
+active = ["researcher", "analyst", "curator"]
+
+# Caveat: define agents below this line, not above it. A key written after an
+# [agents.*] header belongs to that agent, so an `active` placed there is ignored
+# and every defined agent runs.
+
+# The demo cast.
+
+[agents.researcher]
+type = "custom"
+provider = "anthropic"
+model = "claude-opus-4-8"
+name = "Researcher"
+blurb = "I write the explanatory notes"
+tools = ["web_search", "fetch_url", "wikipedia"]
+prompt = """
+You are Researcher. You write the explanatory notes for the user's task in a text
+canvas: what happened, when, and why it matters, in short sourceable lines. Gather
+facts with web search, page fetch, and Wikipedia. Give a team or player the same
+`ref` the other canvases use, so hovering a line lights its row, node, and image;
+read @Analyst's and @Curator's canvases before choosing refs. Change another agent's
+canvas only through its published actions (fire_action), never by editing it; on
+your own canvas publish add_line, edit_line, and delete with task-specific meanings
+so others can maintain it. Be concise. Address a peer as @theirname.
+"""
+
+[agents.analyst]
+type = "custom"
+provider = "anthropic"
+model = "claude-opus-4-8"
+name = "Analyst"
+blurb = "I maintain the tournament table"
+tools = ["wikipedia", "fetch_url", "calculator", "python"]
+prompt = """
+You are Analyst. You maintain the tournament table for the user's task: a
+knockout-stage table of teams and results in a table canvas, which you extend with
+player statistics when the user or @Curator asks, so nobody has to duplicate it.
+Use Wikipedia, page fetch, a calculator, or Python for facts and checks. Treat a
+user's cell edit as a possible convention, not only a literal change: when the user
+abbreviates a value (Forward to FW), propose applying the same convention to the
+whole column and resolve the pending accordingly. Give a team or player the same
+`ref` the other canvases use, so hovering a row lights its node and image. Change
+another agent's canvas only through its published actions (fire_action); on your
+own canvas publish add_row, add_column, edit_cell, and delete with task-specific
+meanings. Be concise. Address a peer as @theirname.
+"""
+
+[agents.curator]
+type = "custom"
+provider = "anthropic"
+model = "claude-opus-4-8"
+name = "Curator"
+blurb = "I keep the bracket and the gallery"
+tools = ["image_search", "fetch_url", "wikipedia"]
+prompt = """
+You are Curator. You own the tournament bracket (a graph canvas of matches and
+winners) and the player gallery (a display canvas of real images found with
+image_search; never invent an image URL). Judge what users draw on your bracket:
+accept an edge that fits the tournament structure and decline one that does not,
+saying why. When you need player statistics, ask @Analyst to extend the table
+through its published actions instead of building your own copy, then reuse the
+published values. Give a team or player the same `ref` the other canvases use, so
+hovering a node or image lights its row and note. On your bracket publish add_node,
+add_edge, edit_node, and delete with task-specific meanings so peers can request
+fixes. Be concise. Address a peer as @theirname.
+"""
+
+# One example per agent framework (extras and keys: README § Configuring the agents).
+
+[agents.claude_sdk]
+type = "claude_agent_sdk"
+name = "Claude_SDK"
+model = "claude-haiku-4-5"
+blurb = "I research the live web (Claude Agent SDK)"
+tools = ["web_search", "web_fetch"]
+prompt = """
+You are Claude_SDK, here to demonstrate the Claude Agent SDK harness. Answer with
+current information using your web search/fetch, and use the canvas tools to show
+what you find. Be concise. To address a peer, mention them as @theirname.
+"""
+
+[agents.openai_sdk]
+type = "openai_agents_sdk"
+name = "OpenAI_SDK"
+model = "gpt-4o-mini"
+blurb = "I research the live web (OpenAI Agents SDK)"
+tools = ["web_search"]
+prompt = """
+You are OpenAI_SDK, here to demonstrate the OpenAI Agents SDK harness. Answer with
+current information using your web search, and use the canvas tools to show what you
+find. Be concise. To address a peer, mention them as @theirname.
+"""
+
+[agents.langgraph]
+type = "langgraph"
+name = "LangGraph"
+model = "claude-haiku-4-5"
+blurb = "I answer with quick facts and figures (LangGraph)"
+tools = ["wikipedia", "calculator"]
+prompt = """
+You are LangGraph, here to demonstrate the LangGraph harness (a StateGraph tool-calling
+loop over our custom tools). Answer with quick facts and figures, and use the canvas
+tools to show what you find. Be concise. To address a peer, mention them as @theirname.
+"""
+
+# Examples for the remaining custom tools.
+
+[agents.search]
+type = "custom"
+name = "Search"
+model = "claude-haiku-4-5"
+blurb = "I look things up: web, Wikipedia, and scholarly sources"
+tools = ["web_search", "fetch_url", "wikipedia", "scholar_search", "image_search"]
+prompt = """
+You are Search. Find information with web search, page fetch, Wikipedia, and
+scholarly lookup, and surface it on a canvas when it helps. When a canvas needs
+images, use `image_search` to get REAL image URLs — never guess/construct an image
+URL yourself. Be concise. Address a peer as @theirname.
+"""
+
+[agents.code]
+type = "custom"
+name = "Code"
+model = "claude-haiku-4-5"
+blurb = "I run Python and do calculations"
+tools = ["python", "calculator"]
+prompt = """
+You are Code. Compute with the calculator and run small Python snippets, and show
+results on a canvas when it helps. Be concise. Address a peer as @theirname.
+"""
+
+[agents.travel]
+type = "custom"
+name = "Travel"
+model = "claude-haiku-4-5"
+blurb = "I handle places, routes, weather, and time"
+tools = ["geocode", "directions", "weather", "datetime"]
+prompt = """
+You are Travel. Geocode places, find routes, check the weather, and tell the time,
+and put maps/results on a canvas when it helps. Be concise. Address a peer as
+@theirname.
+"""

@@ -1,0 +1,453 @@
+{
+  "graph": {
+    "highlight_node": {
+      "view_private": [
+        [
+          "border",
+          "highlight"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ],
+      "dwell": 60
+    },
+    "dehighlight_node": {
+      "view_private": [
+        [
+          "border",
+          "default"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ]
+    },
+    "highlight_edge": {
+      "view_private": [
+        [
+          "stroke",
+          "highlight"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ],
+      "dwell": 60
+    },
+    "dehighlight_edge": {
+      "view_private": [
+        [
+          "stroke",
+          "default"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ]
+    },
+    "select_node": {
+      "view_private": [
+        [
+          "opacity",
+          "1"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "deselect_node": {
+      "view_private": [
+        [
+          "opacity",
+          "default"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "select_edge": {
+      "view_private": [
+        [
+          "opacity",
+          "1"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "deselect_edge": {
+      "view_private": [
+        [
+          "opacity",
+          "default"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "clear_selection": {
+      "view_private": [
+        [
+          "opacity",
+          "default"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "show_node_detail": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "reposition_node": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "apply_layout": {
+      "view_private": [],
+      "broadcasts": [],
+      "presentation": "layout"
+    },
+    "pan": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "zoom": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "fit_all": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "add_node": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "edit_node": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "add_edge": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "delete": {
+      "view_private": [],
+      "broadcasts": []
+    }
+  },
+  "table": {
+    "highlight_cell": {
+      "view_private": [
+        [
+          "border",
+          "highlight"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ],
+      "dwell": 60
+    },
+    "dehighlight_cell": {
+      "view_private": [
+        [
+          "border",
+          "default"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ]
+    },
+    "highlight_row": {
+      "view_private": [
+        [
+          "borderLeft",
+          "highlight"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ],
+      "dwell": 60
+    },
+    "dehighlight_row": {
+      "view_private": [
+        [
+          "borderLeft",
+          "default"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ]
+    },
+    "highlight_column": {
+      "view_private": [
+        [
+          "borderTop",
+          "highlight"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ],
+      "dwell": 60
+    },
+    "dehighlight_column": {
+      "view_private": [
+        [
+          "borderTop",
+          "default"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ]
+    },
+    "select_cell": {
+      "view_private": [
+        [
+          "fill",
+          "selection"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "deselect_cell": {
+      "view_private": [
+        [
+          "fill",
+          "default"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "select_row": {
+      "view_private": [
+        [
+          "children cells fill",
+          "selection"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "deselect_row": {
+      "view_private": [
+        [
+          "children cells fill",
+          "default"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "select_column": {
+      "view_private": [
+        [
+          "children cells fill",
+          "selection"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "deselect_column": {
+      "view_private": [
+        [
+          "children cells fill",
+          "default"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "highlight_block": {
+      "view_private": [
+        [
+          "border",
+          "highlight"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "clear_selection": {
+      "view_private": [
+        [
+          "opacity",
+          "default"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "reorder_row": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "sort_rows_by_column": {
+      "view_private": [
+        [
+          "fontWeight",
+          "700"
+        ],
+        [
+          "glyph",
+          "dir"
+        ]
+      ],
+      "broadcasts": [],
+      "presentation": "sort"
+    },
+    "filter_rows_by_column": {
+      "view_private": [],
+      "broadcasts": [],
+      "presentation": "filter"
+    },
+    "add_row": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "add_column": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "edit_cell": {
+      "view_private": [
+        [
+          "outline",
+          "2px solid #ff6b6b"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "delete": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "clear": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "edit_column": {
+      "view_private": [],
+      "broadcasts": []
+    }
+  },
+  "text": {
+    "highlight_line": {
+      "view_private": [
+        [
+          "background",
+          "highlight"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ],
+      "dwell": 60
+    },
+    "dehighlight_line": {
+      "view_private": [
+        [
+          "background",
+          "default"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ]
+    },
+    "select_line": {
+      "view_private": [
+        [
+          "background",
+          "selection"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "deselect_line": {
+      "view_private": [
+        [
+          "background",
+          "default"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "clear_selection": {
+      "view_private": [
+        [
+          "background",
+          "default"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "collapse_paragraph": {
+      "view_private": [
+        [
+          "fold",
+          "collapsed"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "expand_paragraph": {
+      "view_private": [
+        [
+          "fold",
+          "expanded"
+        ]
+      ],
+      "broadcasts": []
+    },
+    "add_line": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "delete": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "edit_line": {
+      "view_private": [],
+      "broadcasts": []
+    },
+    "find": {
+      "view_private": [],
+      "broadcasts": [],
+      "presentation": "find"
+    }
+  },
+  "display": {
+    "highlight_item": {
+      "view_private": [
+        [
+          "border",
+          "highlight"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ],
+      "dwell": 60
+    },
+    "dehighlight_item": {
+      "view_private": [
+        [
+          "border",
+          "default"
+        ]
+      ],
+      "broadcasts": [
+        "coordination"
+      ]
+    },
+    "change_layout": {
+      "view_private": [],
+      "broadcasts": [],
+      "presentation": "layout"
+    },
+    "focus_item": {
+      "view_private": [],
+      "broadcasts": [],
+      "presentation": "focus"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "create a canvas WITH config -> the replica carries it (config-bearing path)",
+  "frames": [
+    {
+      "type": "CREATE_CANVAS",
+      "canvasId": "c1",
+      "view": "graph",
+      "content": { "nodes": {} },
+      "config": { "actions": { "show_node_detail": { "meaning": "read a profile without leaving the graph" } } },
+      "source": "agent:a",
+      "rev": 1
+    }
+  ],
+  "expected": {
+    "rev": 1,
+    "canvases": {
+      "c1": {
+        "canvasId": "c1",
+        "owner": "agent:a",
+        "view": "graph",
+        "content": { "nodes": {} },
+        "config": { "actions": { "show_node_detail": { "meaning": "read a profile without leaving the graph" } } },
+        "mode": "exclusive",
+        "display": "inline",
+        "closed": false,
+        "lock": null,
+        "pending": {},
+        "highlight": {},
+        "appliedEffects": {},
+        "rev": 1
+      }
+    },
+    "messages": []
+  }
+}

@@ -1,0 +1,763 @@
+{
+ "control": {
+  "common": {
+   "id": {
+    "type": "string"
+   },
+   "label": {
+    "type": "string",
+    "default": ""
+   },
+   "fires": {
+    "type": "string",
+    "desc": "id of a PUBLISHED action this control fires (config.actions key); value becomes the action value",
+    "optional": true
+   },
+   "writes": {
+    "type": "string",
+    "desc": "a config.presentation key this control sets directly (raw render knob, no action; dotted sub-key ok)",
+    "optional": true
+   },
+   "value": {
+    "type": "any",
+    "desc": "initial/default value the control emits",
+    "optional": true
+   }
+  },
+  "types": {
+   "button": {},
+   "select": {
+    "options": {
+     "type": "array<string | number | boolean>",
+     "default": []
+    }
+   },
+   "switch": {},
+   "slider": {
+    "min": {
+     "type": "number",
+     "default": 0
+    },
+    "max": {
+     "type": "number",
+     "default": 1
+    },
+    "step": {
+     "type": "number",
+     "default": 0.01
+    }
+   },
+   "text": {}
+  }
+ },
+ "view": {
+  "canvas_components": {
+   "graph": {
+    "content": {
+     "nodes": {
+      "id": {
+       "type": "string",
+       "default": null
+      },
+      "label": {
+       "type": "string",
+       "default": null
+      },
+      "ref": {
+       "type": "string",
+       "default": null
+      },
+      "refType": {
+       "type": "string",
+       "default": null
+      }
+     },
+     "edges": {
+      "id": {
+       "type": "string",
+       "default": null
+      },
+      "source": {
+       "type": "node id",
+       "default": null
+      },
+      "target": {
+       "type": "node id",
+       "default": null
+      },
+      "label": {
+       "type": "string",
+       "default": ""
+      }
+     }
+    },
+    "presentation": {
+     "layout": {
+      "default": "force",
+      "description": "force | dagre | group",
+      "set_by": "writes:layout",
+      "domain": {
+       "kind": "enum",
+       "values": [
+        "force",
+        "dagre",
+        "group"
+       ]
+      }
+     },
+     "groupBy": {
+      "default": "field",
+      "description": "content field to bucket by when layout=group",
+      "set_by": "writes:groupBy",
+      "domain": {
+       "kind": "string"
+      }
+     },
+     "encoding": {
+      "default": null,
+      "description": "visual-channel map, e.g. {'node.fill':{field,scale}}",
+      "set_by": "writes:encoding",
+      "domain": {
+       "kind": "object"
+      }
+     },
+     "positions": {
+      "default": null,
+      "description": "per-node {id:{x,y}} manual layout override (reposition_node)",
+      "set_by": "gesture:reposition_node",
+      "domain": {
+       "kind": "object"
+      }
+     }
+    },
+    "elements": {
+     "NODE": {},
+     "EDGE": {}
+    },
+    "components": {
+     "surface": {
+      "kind": "chrome",
+      "role": "the empty background pane — pan / zoom / clear-selection target (no ref)"
+     },
+     "controller": {
+      "kind": "controller",
+      "role": "an agent-composed control from config.controls (layout / filter select, fit / add-node button)"
+     }
+    },
+    "actions": {
+     "highlight_node": {
+      "gesture": "hover a node",
+      "element": "NODE",
+      "coordination_paths": "emit"
+     },
+     "dehighlight_node": {
+      "element": "NODE",
+      "coordination_paths": "clear"
+     },
+     "highlight_edge": {
+      "gesture": "hover an edge",
+      "element": "EDGE",
+      "coordination_paths": "emit"
+     },
+     "dehighlight_edge": {
+      "element": "EDGE",
+      "coordination_paths": "clear"
+     },
+     "select_node": {
+      "gesture": "click a node",
+      "element": "NODE",
+      "coordination_paths": "no"
+     },
+     "deselect_node": {
+      "element": "NODE",
+      "coordination_paths": "no"
+     },
+     "select_edge": {
+      "gesture": "click an edge",
+      "element": "EDGE",
+      "coordination_paths": "no"
+     },
+     "deselect_edge": {
+      "element": "EDGE",
+      "coordination_paths": "no"
+     },
+     "clear_selection": {
+      "gesture": "click the empty background",
+      "element": "surface",
+      "coordination_paths": "no"
+     },
+     "show_node_detail": {
+      "gesture": "click a node",
+      "element": "NODE",
+      "coordination_paths": "no"
+     },
+     "reposition_node": {
+      "gesture": "drag a node",
+      "element": "NODE",
+      "coordination_paths": "no",
+      "value": {
+       "x": "number",
+       "y": "number"
+      }
+     },
+     "apply_layout": {
+      "gesture": "use the layout control",
+      "element": "controller",
+      "coordination_paths": "no"
+     },
+     "pan": {
+      "gesture": "drag the background",
+      "element": "surface",
+      "coordination_paths": "no",
+      "value": {
+       "dx": "number",
+       "dy": "number"
+      }
+     },
+     "zoom": {
+      "gesture": "scroll to zoom",
+      "element": "surface",
+      "coordination_paths": "no",
+      "value": {
+       "zoom": "number"
+      }
+     },
+     "fit_all": {
+      "gesture": "use the fit control",
+      "element": "controller",
+      "coordination_paths": "no"
+     },
+     "add_node": {
+      "gesture": "click the add-node control",
+      "element": "controller",
+      "coordination_paths": "no",
+      "consequence": true,
+      "value": {
+       "label": "string"
+      }
+     },
+     "edit_node": {
+      "gesture": "double-click a node",
+      "element": "NODE",
+      "coordination_paths": "no",
+      "consequence": true,
+      "value": {
+       "label": "string"
+      }
+     },
+     "add_edge": {
+      "gesture": "drag from one node onto another",
+      "element": "(NODE, NODE)",
+      "coordination_paths": "no",
+      "consequence": true,
+      "value": {
+       "from": "node/<id>",
+       "to": "node/<id>"
+      }
+     },
+     "delete": {
+      "gesture": "select it, then press Delete",
+      "element": "NODE | EDGE",
+      "coordination_paths": "no",
+      "consequence": true
+     }
+    }
+   },
+   "table": {
+    "content": {
+     "columns": {
+      "id": {
+       "type": "string",
+       "default": null
+      },
+      "label": {
+       "type": "string",
+       "default": null
+      },
+      "type": {
+       "type": "string",
+       "default": "string"
+      }
+     },
+     "rows": {
+      "_id": {
+       "type": "string",
+       "default": null
+      },
+      "ref": {
+       "type": "string",
+       "default": null
+      },
+      "refType": {
+       "type": "string",
+       "default": null
+      }
+     }
+    },
+    "presentation": {
+     "sort": {
+      "default": "unsorted",
+      "description": "{ colId: a column id, dir: asc|desc } — sort column + direction",
+      "set_by": "writes:sort.colId+sort.dir",
+      "domain": {
+       "kind": "object",
+       "fields": {
+        "colId": {
+         "kind": "string"
+        },
+        "dir": {
+         "kind": "enum",
+         "values": [
+          "asc",
+          "desc"
+         ]
+        }
+       }
+      }
+     },
+     "filter": {
+      "default": null,
+      "description": "{ colId: a column id, keyword: text } — filter a column by substring",
+      "set_by": "writes:filter.colId+filter.keyword",
+      "domain": {
+       "kind": "object",
+       "fields": {
+        "colId": {
+         "kind": "string"
+        },
+        "keyword": {
+         "kind": "string"
+        }
+       }
+      }
+     },
+     "order": {
+      "default": null,
+      "description": "explicit row id order (reorder)",
+      "set_by": "gesture:reorder_row",
+      "domain": {
+       "kind": "list"
+      }
+     }
+    },
+    "elements": {
+     "ROW": {},
+     "COLUMN": {},
+     "CELL": {}
+    },
+    "components": {
+     "surface": {
+      "kind": "chrome",
+      "role": "the empty background pane — clear-selection target (no ref)"
+     },
+     "row_handle": {
+      "kind": "chrome",
+      "role": "the row's left grip — hover / select / drag-reorder a row"
+     },
+     "column_header": {
+      "kind": "chrome",
+      "role": "the column header cell — hover / click addresses the COLUMN; hosts the column_controller"
+     },
+     "column_controller": {
+      "kind": "column_controller",
+      "role": "a built-in, view-embedded control on the column header — sorts / filters rows by this column (fires sort_rows_by_column / filter_rows_by_column); fixed by the view, unlike an agent-composed controller"
+     },
+     "new_row_slot": {
+      "kind": "chrome",
+      "role": "the + affordance below the last row — appends a row"
+     },
+     "new_column_slot": {
+      "kind": "chrome",
+      "role": "the empty column at the right edge — appends a column"
+     }
+    },
+    "actions": {
+     "highlight_cell": {
+      "gesture": "hover a cell",
+      "element": "CELL",
+      "coordination_paths": "emit"
+     },
+     "dehighlight_cell": {
+      "element": "CELL",
+      "coordination_paths": "clear"
+     },
+     "highlight_row": {
+      "gesture": "hover a row",
+      "element": "ROW",
+      "coordination_paths": "emit"
+     },
+     "dehighlight_row": {
+      "element": "ROW",
+      "coordination_paths": "clear"
+     },
+     "highlight_column": {
+      "gesture": "hover a column header",
+      "element": "COLUMN",
+      "coordination_paths": "emit"
+     },
+     "dehighlight_column": {
+      "element": "COLUMN",
+      "coordination_paths": "clear"
+     },
+     "select_cell": {
+      "gesture": "click a cell",
+      "element": "CELL",
+      "coordination_paths": "no"
+     },
+     "deselect_cell": {
+      "element": "CELL",
+      "coordination_paths": "no"
+     },
+     "select_row": {
+      "gesture": "click a row",
+      "element": "ROW",
+      "coordination_paths": "no"
+     },
+     "deselect_row": {
+      "element": "ROW",
+      "coordination_paths": "no"
+     },
+     "select_column": {
+      "gesture": "click a column header",
+      "element": "COLUMN",
+      "coordination_paths": "no"
+     },
+     "deselect_column": {
+      "element": "COLUMN",
+      "coordination_paths": "no"
+     },
+     "highlight_block": {
+      "gesture": "drag across a block of cells",
+      "element": "(CELL, CELL)",
+      "coordination_paths": "no",
+      "value": {
+       "from": "cell/<rowId>/<colId>",
+       "to": "cell/<rowId>/<colId>"
+      }
+     },
+     "clear_selection": {
+      "gesture": "click the empty background",
+      "element": "surface",
+      "coordination_paths": "no"
+     },
+     "reorder_row": {
+      "gesture": "drag the row's left handle",
+      "element": "ROW",
+      "coordination_paths": "no",
+      "value": {
+       "toIndex": "number"
+      }
+     },
+     "sort_rows_by_column": {
+      "gesture": "click the sort control in the column header",
+      "element": "column_controller",
+      "coordination_paths": "no",
+      "value": {
+       "dir": "asc | desc"
+      }
+     },
+     "filter_rows_by_column": {
+      "gesture": "type in the column's filter",
+      "element": "column_controller",
+      "coordination_paths": "no",
+      "value": {
+       "keyword": "string"
+      }
+     },
+     "add_row": {
+      "gesture": "click the + below the last row",
+      "element": "new_row_slot",
+      "coordination_paths": "no",
+      "consequence": true,
+      "value": {
+       "values": {
+        "<columnId>": "cell value"
+       }
+      }
+     },
+     "add_column": {
+      "gesture": "click the + at the right edge",
+      "element": "new_column_slot",
+      "coordination_paths": "no",
+      "consequence": true,
+      "value": {
+       "label": "string",
+       "type": "string"
+      }
+     },
+     "edit_cell": {
+      "gesture": "double-click a cell",
+      "element": "CELL",
+      "coordination_paths": "no",
+      "consequence": true,
+      "value": {
+       "value": "string"
+      }
+     },
+     "delete": {
+      "gesture": "select a row or column, then press Delete",
+      "element": "ROW | COLUMN",
+      "coordination_paths": "no",
+      "consequence": true
+     },
+     "clear": {
+      "gesture": "select cells, then press Delete",
+      "element": "CELL | BLOCK",
+      "coordination_paths": "no",
+      "consequence": true,
+      "value": {
+       "cells": "[[rowId, colId], …]"
+      }
+     },
+     "edit_column": {
+      "gesture": "double-click the column header",
+      "element": "COLUMN",
+      "coordination_paths": "no",
+      "consequence": true,
+      "value": {
+       "label": "string"
+      }
+     }
+    }
+   },
+   "text": {
+    "content": {
+     "paragraphs": {
+      "id": {
+       "type": "string",
+       "default": null
+      },
+      "ref": {
+       "type": "string",
+       "default": null
+      }
+     },
+     "lines": {
+      "id": {
+       "type": "string",
+       "default": null
+      },
+      "text": {
+       "type": "string",
+       "default": null
+      },
+      "paragraph": {
+       "type": "string",
+       "default": null
+      },
+      "ref": {
+       "type": "string",
+       "default": null
+      }
+     }
+    },
+    "presentation": {
+     "collapsed": {
+      "default": null,
+      "description": "paragraph/<id> list that is folded",
+      "set_by": "gesture:collapse_paragraph",
+      "domain": {
+       "kind": "list"
+      }
+     },
+     "find": {
+      "default": null,
+      "description": "current search query (highlights + navigates matches)",
+      "set_by": "writes:find",
+      "domain": {
+       "kind": "string"
+      }
+     }
+    },
+    "elements": {
+     "PARAGRAPH": {},
+     "LINE": {}
+    },
+    "components": {
+     "surface": {
+      "kind": "chrome",
+      "role": "the empty background pane — clear-selection target (no ref)"
+     },
+     "fold": {
+      "kind": "chrome",
+      "role": "the paragraph fold chevron — collapse / expand a paragraph"
+     },
+     "controller": {
+      "kind": "controller",
+      "role": "an agent-composed control from config.controls (e.g. a find box)"
+     }
+    },
+    "actions": {
+     "highlight_line": {
+      "gesture": "hover a line",
+      "element": "LINE",
+      "coordination_paths": "emit"
+     },
+     "dehighlight_line": {
+      "element": "LINE",
+      "coordination_paths": "clear"
+     },
+     "select_line": {
+      "gesture": "click a line",
+      "element": "LINE",
+      "coordination_paths": "no"
+     },
+     "deselect_line": {
+      "element": "LINE",
+      "coordination_paths": "no"
+     },
+     "clear_selection": {
+      "gesture": "click the empty background",
+      "element": "surface",
+      "coordination_paths": "no"
+     },
+     "collapse_paragraph": {
+      "gesture": "click the paragraph's fold chevron",
+      "element": "fold",
+      "coordination_paths": "no"
+     },
+     "expand_paragraph": {
+      "gesture": "click the paragraph's fold chevron",
+      "element": "fold",
+      "coordination_paths": "no"
+     },
+     "add_line": {
+      "gesture": "click the + at a line's end",
+      "element": "LINE",
+      "coordination_paths": "no",
+      "consequence": true,
+      "value": {
+       "paragraph": "<paragraphId>",
+       "after": "<lineId>",
+       "text": "new line text"
+      }
+     },
+     "delete": {
+      "gesture": "select a line, then press Delete",
+      "element": "LINE",
+      "coordination_paths": "no",
+      "consequence": true
+     },
+     "edit_line": {
+      "gesture": "double-click a line",
+      "element": "LINE",
+      "coordination_paths": "no",
+      "consequence": true,
+      "value": {
+       "text": "string"
+      }
+     },
+     "find": {
+      "gesture": "type in the find box",
+      "element": "controller",
+      "coordination_paths": "no"
+     }
+    }
+   },
+   "display": {
+    "content": {
+     "items": {
+      "id": {
+       "type": "string",
+       "default": null
+      },
+      "type": {
+       "type": "string",
+       "range": [
+        "image",
+        "document",
+        "map"
+       ],
+       "default": "image"
+      },
+      "src": {
+       "type": "string",
+       "default": null
+      },
+      "center": {
+       "type": "[lat, lng]",
+       "default": null
+      },
+      "zoom": {
+       "type": "number",
+       "default": null
+      },
+      "ref": {
+       "type": "string",
+       "default": null
+      },
+      "caption": {
+       "type": "string",
+       "default": null
+      }
+     }
+    },
+    "presentation": {
+     "layout": {
+      "default": "grid",
+      "description": "grid | strip — the gallery style (single is not a layout; it is derived when one item exists or one is opened)",
+      "set_by": "writes:layout",
+      "domain": {
+       "kind": "enum",
+       "values": [
+        "grid",
+        "strip"
+       ]
+      }
+     },
+     "focus": {
+      "default": null,
+      "description": "item/<id> currently focused",
+      "set_by": "gesture:focus_item",
+      "domain": {
+       "kind": "string"
+      }
+     }
+    },
+    "elements": {
+     "ITEM": {}
+    },
+    "components": {
+     "surface": {
+      "kind": "chrome",
+      "role": "the empty background pane — clear-selection target (no ref)"
+     },
+     "stage": {
+      "kind": "chrome",
+      "role": "the media viewport (image / PDF / map) — personal pan / zoom (no ref)"
+     },
+     "controller": {
+      "kind": "controller",
+      "role": "an agent-composed control from config.controls (layout / focus / fit)"
+     }
+    },
+    "actions": {
+     "highlight_item": {
+      "gesture": "hover an item",
+      "element": "ITEM",
+      "coordination_paths": "emit"
+     },
+     "dehighlight_item": {
+      "element": "ITEM",
+      "coordination_paths": "clear"
+     },
+     "focus_item": {
+      "gesture": "click an item",
+      "element": "ITEM",
+      "coordination_paths": "no"
+     },
+     "change_layout": {
+      "gesture": "use the layout control",
+      "element": "controller",
+      "coordination_paths": "no"
+     },
+     "fit_content": {
+      "gesture": "use the fit control",
+      "element": "controller",
+      "coordination_paths": "no"
+     }
+    }
+   }
+  }
+ }
+}

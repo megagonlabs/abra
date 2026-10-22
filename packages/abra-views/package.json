@@ -1,0 +1,24 @@
+{
+  "name": "abra-views",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./bindings": "./src/views/shared/manifests/bindings.js"
+  },
+  "peerDependencies": {
+    "react": "^18.3",
+    "react-dom": "^18.3"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "^3.0.0",
+    "@tanstack/react-table": "^8.21.3",
+    "@xyflow/react": "^12.0.0",
+    "d3-force": "^3.0.0",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^4.2.1",
+    "react-pdf": "^9.2.1",
+    "react-resizable-panels": "^4.11.2"
+  }
+}

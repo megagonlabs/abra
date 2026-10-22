@@ -1,0 +1,39 @@
+{
+  "name": "create a canvas, then merge content via an update delta",
+  "frames": [
+    {
+      "type": "CREATE_CANVAS",
+      "canvasId": "c1",
+      "view": "graph",
+      "content": { "nodes": { "n1": { "label": "A" } } },
+      "source": "agent:a",
+      "rev": 1
+    },
+    {
+      "type": "UPDATE_CANVAS",
+      "canvasId": "c1",
+      "content": { "nodes": { "n1": { "label": "B" }, "n2": { "label": "C" } } },
+      "rev": 2
+    }
+  ],
+  "expected": {
+    "rev": 2,
+    "canvases": {
+      "c1": {
+        "canvasId": "c1",
+        "owner": "agent:a",
+        "view": "graph",
+        "content": { "nodes": { "n1": { "label": "B" }, "n2": { "label": "C" } } },
+        "mode": "exclusive",
+        "display": "inline",
+        "closed": false,
+        "lock": null,
+        "pending": {},
+        "highlight": {},
+        "appliedEffects": {},
+        "rev": 2
+      }
+    },
+    "messages": []
+  }
+}
